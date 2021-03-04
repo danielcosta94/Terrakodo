@@ -77,7 +77,6 @@ class TaskController extends AbstractController
      */
     public function getTask(TaskRepository $taskRepository, int $id): JsonResponse
     {
-
         $task = $taskRepository->find($id);
         if (!$task){
             $data = [
@@ -135,6 +134,40 @@ class TaskController extends AbstractController
     }
 
     /**
+     * @param Request $request
+     * @param TaskService $taskService
+     * @param int $id
+     * @return JsonResponse
+     * @Route("/tasks/{id}/validate", name="tasks_put", methods={"POST"})
+     */
+    public function validateTask(Request $request, TaskService $taskService, int $id): JsonResponse
+    {
+        try {
+            $taskService->validateTask($id);
+
+            $responseCode = Response::HTTP_OK;
+            $responseData = [
+                'status' => $responseCode,
+                'result' => "Task validated successfully",
+            ];
+            return $this->response($responseData);
+        } catch (\InvalidArgumentException $invalidArgumentException) {
+            $responseCode = Response::HTTP_BAD_REQUEST;
+            $responseData = [
+                'status' => $responseCode,
+                'errors' => [$invalidArgumentException->getMessage()],
+            ];
+        } catch (\Exception $exception) {
+            $responseCode = Response::HTTP_INTERNAL_SERVER_ERROR;
+            $responseData = [
+                'status' => $responseCode,
+                'errors' => [$exception->getMessage()],
+            ];
+        }
+        return $this->response($responseData, $responseCode);
+    }
+
+    /**
      * @param EntityManagerInterface $entityManager
      * @param TaskRepository $taskRepository
      * @param int $id
@@ -157,7 +190,7 @@ class TaskController extends AbstractController
         $entityManager->flush();
         $data = [
             'status' => Response::HTTP_OK,
-            'errors' => "Task deleted successfully",
+            'result' => "Task deleted successfully",
         ];
         return $this->response($data);
     }

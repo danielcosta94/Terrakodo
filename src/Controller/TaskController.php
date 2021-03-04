@@ -11,7 +11,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
 /**
- * @Route("/task")
+ * @Route("/tasks")
  */
 class TaskController extends AbstractController
 {
@@ -20,7 +20,7 @@ class TaskController extends AbstractController
      */
     public function index(TaskRepository $taskRepository): Response
     {
-        return $this->render('task/index.html.twig', [
+        return $this->render('tasks/index.html.twig', [
             'tasks' => $taskRepository->findAll(),
         ]);
     }
@@ -42,7 +42,7 @@ class TaskController extends AbstractController
             return $this->redirectToRoute('task_index');
         }
 
-        return $this->render('task/new.html.twig', [
+        return $this->render('tasks/new.html.twig', [
             'task' => $task,
             'form' => $form->createView(),
         ]);
@@ -53,7 +53,7 @@ class TaskController extends AbstractController
      */
     public function show(Task $task): Response
     {
-        return $this->render('task/show.html.twig', [
+        return $this->render('tasks/show.html.twig', [
             'task' => $task,
         ]);
     }
@@ -72,7 +72,7 @@ class TaskController extends AbstractController
             return $this->redirectToRoute('task_index');
         }
 
-        return $this->render('task/edit.html.twig', [
+        return $this->render('tasks/edit.html.twig', [
             'task' => $task,
             'form' => $form->createView(),
         ]);

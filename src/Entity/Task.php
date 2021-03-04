@@ -41,10 +41,10 @@ class Task implements \JsonSerializable
     private ?int $priority_level;
 
     /**
-     * @ORM\Column(type="datetime", nullable=true)
+     * @ORM\Column(type="date", nullable=true)
      * @Assert\Date
      */
-    private ?\DateTimeInterface $date_completion;
+    private ?\DateTime $date_completion;
 
     public function getId(): ?int
     {
@@ -90,7 +90,7 @@ class Task implements \JsonSerializable
     /**
      * @return \DateTimeInterface
      */
-    public function getDateCompletion(): \DateTimeInterface
+    public function getDateCompletion(): ?\DateTimeInterface
     {
         return $this->date_completion;
     }
@@ -109,6 +109,7 @@ class Task implements \JsonSerializable
     public function jsonSerialize(): array
     {
         return [
+            'id' => $this->id,
             'name' => $this->name,
             'description' => $this->description,
             'priority_level' => $this->priority_level,

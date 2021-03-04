@@ -6,6 +6,7 @@ use App\Entity\Task;
 use App\Repository\TaskRepository;
 use Carbon\Carbon;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\Validator\Constraints\Date;
 use Symfony\Component\Validator\ConstraintViolationListInterface;
 use Symfony\Component\Validator\Validation;
 use Symfony\Component\Validator\Validator\RecursiveValidator;
@@ -42,7 +43,7 @@ class TaskService
      *
      * @return ConstraintViolationListInterface
      */
-    private function validateTask(Task $task): ConstraintViolationListInterface
+    private function validationTask(Task $task): ConstraintViolationListInterface
     {
         return $this->validator->validate($task);
     }
@@ -57,20 +58,20 @@ class TaskService
     {
         $task ??= new Task();
 
-        if (isset($data['name'])) {
+        if (!empty($data['name'])) {
             $task->setName($data['name']);
         }
 
-        if (isset($data['description'])) {
+        if (!empty($data['description'])) {
             $task->setDescription($data['description']);
         }
 
-        if (isset($data['priority_level'])) {
+        if (!empty($data['priority_level'])) {
             $task->setPriorityLevel($data['priority_level']);
         }
 
-        if (isset($data['date_completion'])) {
-            $task->setDateCompletion(Carbon::createFromFormat('Y-m-d', $data['date_completion']));
+        if (!empty($data['date_completion'])) {
+            $task->setDateCompletion(new \DateTime($data['date_completion']));
         }
 
         return $task;
@@ -79,21 +80,22 @@ class TaskService
     public function createTask(array &$request, Task $task = null): array
     {
         $task = $this->buildTaskObject($request, $task);
-        $errors = $this->validateTask($task);
+//        $errors = $this->validateTask($task);
 
-        if (!count($errors)) {
+
+//        if (!count($errors)) {
             $this->entityManager->persist($task);
             $this->entityManager->flush();
             return [];
-        } else {
-            $errorsList = [];
-
-            foreach ($errorsList as $error) {
-                $errors[] = $error;
-            }
-
-            return $errorsList;
-        }
+//        } else {
+//            $errorsList = [];
+//
+//            foreach ($errorsList as $error) {
+//                $errors[] = $error;
+//            }
+//
+//            return $errorsList;
+//        }
     }
 
     public function updateTask(array &$request, int $id)
@@ -102,6 +104,26 @@ class TaskService
 
         if ($task != null) {
             return $this->createTask($request, $task);
+        } else {
+            throw new \InvalidArgumentException(sprintf("Task with ID: %d not found !!!", $id));
+        }
+    }
+
+    public function validateTask(int $id)
+    {
+        $task = $this->taskRepository->find($id);
+
+        if ($task != null) {
+            if ($task->getDateCompletion() === null) {
+                $task->setDateCompletion(new \DateTime(Carbon::now()->format('Y-m-d')));
+
+                $this->entityManager->persist($task);
+                $this->entityManager->flush();
+
+                return [];
+            } else {
+                throw new \InvalidArgumentException(sprintf("Task with ID: %d was already completed !!!", $id));
+            }
         } else {
             throw new \InvalidArgumentException(sprintf("Task with ID: %d not found !!!", $id));
         }

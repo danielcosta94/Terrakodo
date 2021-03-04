@@ -1,11 +1,255 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}New Task{% endblock %}
+{% block content %}
+    <!-- Main content -->
+    <div class="content-wrapper">
 
-{% block body %}
-    <h1>Create new Task</h1>
+        <!-- Content area -->
+        <div class="content">
 
-    {{ include('task/_form.html.twig') }}
+            <!-- Form inputs -->
+            <div class="card">
+                <div class="card-header header-elements-inline">
+                    <h5 class="card-title">Add Task</h5>
+                    <div class="header-elements">
+                        <div class="list-icons">
+                            <a class="list-icons-item" data-action="collapse"></a>
+                            <a class="list-icons-item" data-action="reload"></a>
+                            <a class="list-icons-item" data-action="remove"></a>
+                        </div>
+                    </div>
+                </div>
 
-    <a href="{{ path('task_index') }}">back to list</a>
+                <div class="card-body">
+                    <p class="mb-4"></p>
+
+                    <form id="new-task-form" action="#">
+                        <fieldset>
+                            <legend class="text-uppercase font-size-sm font-weight-bold">Data</legend>
+
+                            <div class="form-group">
+                                <label for="name" class="col-form-label">Name</label>
+                                <input id="name" name="name" type="text" class="form-control" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="description" class="col-form-label">Description</label>
+                                <textarea id="description" name="description" class="form-control" placeholder="Insert a description"></textarea>
+                            </div>
+
+                            <div class="form-group row">
+                                <div class="col-6">
+                                    <div class="form-group">
+                                        <label for="priority-level" class="col-form-label">Priority Level</label>
+                                        <input id="priority-level" name="priority_level" type="number" class="form-control" min="1" max="5" required>
+                                    </div>
+                                </div>
+
+                                <div class="col-6">
+                                    <div class="form-group">
+                                        <label for="date-completion" class="col-form-label">Date Completion</label>
+                                        <input id="date-completion" name="date_completion" class="form-control" type="date" value="">
+                                    </div>
+                                </div>
+                            </div>
+                        </fieldset>
+
+                        <div class="text-right">
+                            <button type="submit" class="btn btn-primary">Submit <i class="icon-paperplane ml-2"></i></button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <!-- /form inputs -->
+
+            <div class="card">
+                <div class="table-responsive">
+                    <table id="tasks" class="table table-hover table-striped datatable-tasks">
+                        <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Description</th>
+                            <th>Priority Level</th>
+                            <th>Date Completion</th>
+                            <th class="text-right">Actions</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <td colspan="10" class="text-center">Loading...</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <!-- /content area -->
+    </div>
+    <!-- /main content -->
 {% endblock %}
+
+{% block javascript_extras %}
+    <!-- Theme JS files -->
+    <script src="{{ asset('js/demo_pages/form_inputs.js') }}"></script>
+
+    <script>
+        let tasks = [];
+
+        function listTasks()
+        {
+            $.ajax(
+                "/api/tasks",
+                {
+                    dataType: "json",
+                    method: "GET",
+                    cache: false,
+                    success: function ( data, textStatus, jqXHR ) {
+                        if (!Array.isArray(data)) {
+                            alert('No tasks found');
+                            return;
+                        }
+                        tasks = data;
+                    },
+                    error: function (jqXHR, textStatus, errorThrown) {
+                        console.log(textStatus + (errorThrown ? '\r\n' + errorThrown : ''));
+                    },
+                    complete: function () {
+                        loadTasksTable();
+                    }
+                }
+            );
+        }
+
+        function validateTask(id)
+        {
+            $.ajax(
+                "/api/tasks/" + id + "/validate" ,
+                {
+                    dataType: "json",
+                    method: "POST",
+                    cache: false,
+                    success: function ( data, textStatus, jqXHR ) {
+                        alert(data.result);
+                    },
+                    error: function (jqXHR, textStatus, errorThrown) {
+                        console.log(textStatus + (errorThrown ? '\r\n' + errorThrown : ''));
+                    },
+                    complete: function () {
+                        listTasks();
+                    }
+                }
+            );
+        }
+
+        function deleteTask(id)
+        {
+            $.ajax(
+                "/api/tasks/" + id ,
+                {
+                    dataType: "json",
+                    method: "DELETE",
+                    cache: false,
+                    success: function ( data, textStatus, jqXHR ) {
+                        alert(data.result);
+                    },
+                    error: function (jqXHR, textStatus, errorThrown) {
+                        console.log(textStatus + (errorThrown ? '\r\n' + errorThrown : ''));
+                    },
+                    complete: function () {
+                        listTasks();
+                    }
+                }
+            );
+        }
+
+        function loadTasksTable()
+        {
+            table = $('#tasks').DataTable({
+                destroy: true,
+                data: tasks,
+                "columns": [
+                    { "data": "name" },
+                    { "data": "description" },
+                    { "data": "priority_level" },
+                    {
+                        "data": null,
+                        "render": function(data, type, row, meta) {
+                            if (data.date_completion) {
+                                return data.date_completion.date
+                            }
+                            return '';
+                        }
+                    },
+                    {
+                        "className": 'text-right text-nowrap',
+                        "data": null,
+                        "render": function(data, type, row, meta) {
+                            let result = '';
+
+                            if (data.date_completion === null) {
+                                result += `<button class="btn btn-outline-warning btn-validate btn-xs" title="Validate"
+                                        value="${data.id}">Validate</button>`;
+                            }
+
+                            result += `<a class="btn btn-outline-info btn-xs" title="Edit"
+                                        href="/tasks/edit/${data.id}">Edit</a>`;
+
+                            result += `<button class="btn btn-outline-danger btn-delete btn-xs" title="Delete"
+                                        value="${data.id}">Delete</button>`;
+
+                            return result;
+                        }
+                    },
+                ],
+                // "order": [[0, 'asc']],
+                "columnDefs": [
+                    {
+                        orderable: false,
+                        targets: [4],
+                        type: 'html',
+                    }
+                ],
+            });
+        }
+
+        $(document).ready(function() {
+            listTasks();
+
+            let form = $("#new-task-form");
+
+            form.submit(event => {
+                event.preventDefault();
+
+                let name = form.find("#name").val();
+                let description = form.find("#description").val();
+                let priority_level = form.find("#priority-level").val();
+                let date_completion = form.find("#date-completion").val();
+
+                let payload = {name, description, priority_level, date_completion};
+
+                $.ajax({
+                    url: '/api/tasks',
+                    type: 'POST',
+                    data: payload,
+                    dataType: 'json',
+                    success: function ( data, textStatus, jqXHR ) {
+                        alert('Task Inserted');
+                        listTasks();
+                    },
+                    error: function (jqXHR, textStatus, errorThrown) {
+                        console.log(textStatus + (errorThrown ? '\r\n' + errorThrown : ''));
+                    },
+                });
+            });
+
+            $('#tasks').on('click', '.btn-validate', event => {
+                validateTask(event.target.value);
+            });
+            $('#tasks').on('click', '.btn-delete', event => {
+                deleteTask(event.target.value);
+            });
+        });
+    </script>
+{% endblock %}
+
+
