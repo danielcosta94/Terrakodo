@@ -2,40 +2,49 @@
 
 namespace App\Entity;
 
+use ApiPlatform\Core\Annotation\ApiResource;
 use App\Repository\TaskRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
 
 /**
+ * @ApiResource()
  * @ORM\Entity(repositoryClass=TaskRepository::class)
+ * @ORM\Table(name="tasks")
  */
-class Task
+class Task implements \JsonSerializable
 {
     /**
      * @ORM\Id
      * @ORM\GeneratedValue
      * @ORM\Column(type="integer")
      */
-    private $id;
+    private ?int $id;
 
     /**
      * @ORM\Column(type="string", length=255)
+     * @Assert\Length(max = 255, maxMessage = "Name of task cannot be longer than {{ limit }} characters")
+     * @Assert\NotBlank
      */
-    private $name;
+    private ?string $name;
 
     /**
      * @ORM\Column(type="string", length=255, nullable=true)
+     * @Assert\Length(max = 255, maxMessage = "Description of task cannot be longer than {{ limit }} characters")
      */
-    private $description;
+    private ?string $description;
 
     /**
      * @ORM\Column(type="smallint")
+     * @Assert\Range(min = 1, max = 5, notInRangeMessage = "You must choose between {{ min }} and {{ max }} priority levels")
      */
-    private $priority_level;
+    private ?int $priority_level;
 
     /**
      * @ORM\Column(type="datetime", nullable=true)
+     * @Assert\Date
      */
-    private $date_completion;
+    private ?\DateTimeInterface $date_completion;
 
     public function getId(): ?int
     {
@@ -78,15 +87,32 @@ class Task
         return $this;
     }
 
-    public function getDateCompletion(): ?\DateTimeInterface
+    /**
+     * @return \DateTimeInterface
+     */
+    public function getDateCompletion(): \DateTimeInterface
     {
         return $this->date_completion;
     }
 
-    public function setDateCompletion(?\DateTimeInterface $date_completion): self
+    /**
+     * @param \DateTimeInterface $date_completion
+     * @return Task
+     */
+    public function setDateCompletion(\DateTimeInterface $date_completion): Task
     {
         $this->date_completion = $date_completion;
 
         return $this;
+    }
+
+    public function jsonSerialize(): array
+    {
+        return [
+            'name' => $this->name,
+            'description' => $this->description,
+            'priority_level' => $this->priority_level,
+            'date_completion' => $this->date_completion,
+        ];
     }
 }
