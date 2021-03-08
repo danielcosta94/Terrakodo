@@ -52,6 +52,11 @@
                                     </div>
                                 </div>
                             </div>
+
+                            <div class="form-group">
+                                <label for="file" class="col-form-label">Upload File</label>
+                                <input id="file" name="file" class="form-control" type="file" formenctype="multipart/form-data">
+                            </div>
                         </fieldset>
 
                         <div class="text-right">
@@ -220,18 +225,28 @@
             form.submit(event => {
                 event.preventDefault();
 
+                var formData = new FormData();
+
                 let name = form.find("#name").val();
                 let description = form.find("#description").val();
                 let priority_level = form.find("#priority-level").val();
                 let date_completion = form.find("#date-completion").val();
 
-                let payload = {name, description, priority_level, date_completion};
+                formData.append('name', name);
+                formData.append('description', description);
+                formData.append('priority_level', priority_level);
+                formData.append('date_completion', date_completion);
+
+                if (form.find("#file")[0] != null) {
+                    formData.append('file', form.find("#file")[0].files[0]);
+                }
 
                 $.ajax({
                     url: '/api/tasks',
+                    data: formData,
                     type: 'POST',
-                    data: payload,
-                    dataType: 'json',
+                    contentType: false, // NEEDED, DON'T OMIT THIS (requires jQuery 1.6+)
+                    processData: false, // NEEDED, DON'T OMIT THIS
                     success: function ( data, textStatus, jqXHR ) {
                         alert('Task Inserted');
                         listTasks();

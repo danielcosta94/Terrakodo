@@ -54,7 +54,7 @@ class TaskService
      *
      * @return Task
      */
-    private function buildTaskObject(array $data, Task $task = null): Task
+    private function buildTaskObject(array $data, $file = null, Task $task = null): Task
     {
         $task ??= new Task();
 
@@ -74,12 +74,16 @@ class TaskService
             $task->setDateCompletion(new \DateTime($data['date_completion']));
         }
 
+        if (isset($file)) {
+            $task->setFile($file);
+        }
+
         return $task;
     }
 
-    public function createTask(array &$request, Task $task = null): array
+    public function createTask(array &$data, $file): array
     {
-        $task = $this->buildTaskObject($request, $task);
+        $task = $this->buildTaskObject($data, $file);
 //        $errors = $this->validateTask($task);
 
 

@@ -42,7 +42,10 @@ class TaskController extends AbstractController
         try {
             $request = $this->transformJsonBody($request);
             $data = $request->request->all();
-            $errors = $taskService->createTask($data);
+
+            $file = $request->files->get('file') ?? null;
+
+            $errors = $taskService->createTask($data, $file);
 
             if (empty($errors)) {
                 $responseCode = Response::HTTP_CREATED;

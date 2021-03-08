@@ -46,6 +46,12 @@ class Task implements \JsonSerializable
      */
     private ?\DateTime $date_completion;
 
+    /**
+     * @ORM\Column(type="blob", nullable=true)
+     * @Assert\File()
+     */
+    private $file;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -103,6 +109,24 @@ class Task implements \JsonSerializable
     {
         $this->date_completion = $date_completion;
 
+        return $this;
+    }
+
+    /**
+     * @return \DateTime|null
+     */
+    public function getFile(): ?\DateTime
+    {
+        return $this->file;
+    }
+
+    /**
+     * @param $file
+     * @return $this
+     */
+    public function setFile( $file): Task
+    {
+        $this->file = $file;
         return $this;
     }
 
